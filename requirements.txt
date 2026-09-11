@@ -1,12 +1,12 @@
-langchain-ollama
+flask
+gunicorn
+langchain
+langchain-core
+langchain-community
+langchain-pinecone
+langchain-groq
+langchain-huggingface
 sentence-transformers
 pinecone
-langchain
-langchain-community
-langchain-huggingface
-langchain-pinecone
-langchain-core
-flask
 pypdf
 python-dotenv
--e .
