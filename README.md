@@ -88,7 +88,7 @@ This RAG chatbot is indexed using content from ***The Gale Encyclopedia of Medic
 ## 📁 Repository Structure
 
 ```text
-Medical-Chatbot/
+Medical-RAG-Chatbot/
 │
 ├── src/
 │   ├── __init__.py
@@ -120,8 +120,8 @@ We use **Google Secret Manager** in production to securely inject API keys into 
 **1. Clone the repository:**
 
 ```bash
-git clone https://github.com/OjasPal/Medical-Chatbot.git
-cd Medical-Chatbot
+git clone https://github.com/OjasPal/Medical-RAG-Chatbot.git
+cd Medical-RAG-Chatbot
 ```
 
 **2. Create a virtual environment & install dependencies:**
@@ -162,4 +162,4 @@ gcloud run deploy medical-chatbot \
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](https://github.com/OjasPal/Medical-Chatbot/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/LICENSE) file for details.
