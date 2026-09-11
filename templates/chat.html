@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <!-- Added maximum-scale to prevent unwanted zooming on mobile input focus -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Medical Chatbot</title>
+    <!-- Icons & Flask Static CSS Integration -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Semantic Header -->
+        <header class="app-header">
+            <div class="brand-section">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-notes-medical"></i>
+                </div>
+                <div class="brand-title">
+                    <h1>Medical Chatbot</h1>
+                    <div class="status-indicator">
+                        <span class="pulse-dot"></span>
+                        <span>Ollama RAG Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="header-actions">
+                <button class="icon-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+                    <i class="fa-solid fa-sun" id="themeIcon"></i>
+                </button>
+                <button class="icon-btn" id="clearChatBtn" title="Clear Conversation">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </nav>
+        </header>
+
+        <!-- Main Conversation Viewport -->
+        <main class="chat-viewport" id="chatViewport">
+            <!-- Initial Bot Message -->
+            <article class="msg msg-bot">
+                <div class="msg-avatar"><i class="fa-solid fa-user-doctor"></i></div>
+                <div class="msg-bubble">
+                    Hello! I am your AI Medical Assistant powered by Ollama. Ask me any health or medical reference question to get started.
+                </div>
+            </article>
+        </main>
+
+        <!-- Footer Input Section -->
+        <footer class="chat-input-wrapper">
+            <form id="chatForm" class="input-card">
+                <input type="text" id="userInput" placeholder="Type a medical query..." autocomplete="off" required>
+                <button type="submit" class="send-btn" title="Send Message">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
+            </form>
+        </footer>
+    </div>
+
+    <!-- Client-side Interactivity -->
+    <script>
+        const htmlElement = document.documentElement;
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const chatViewport = document.getElementById('chatViewport');
+
+        // 1. Theme Switcher
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', newTheme);
+            themeIcon.className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        });
+
+        // 2. Clear Chat History (Bug fixed here: added missing closing backtick)
+        clearChatBtn.addEventListener('click', async () => {
+            await fetch('/clear', { method: 'POST' });
+            chatViewport.innerHTML = `
+                <article class="msg msg-bot">
+                    <div class="msg-avatar"><i class="fa-solid fa-user-doctor"></i></div>
+                    <div class="msg-bubble">Conversation and memory cleared. How else can I assist you?</div>
+                </article>`;
+        });
+
+        // 3. Scroll Helper
+        function scrollToBottom() {
+            chatViewport.scrollTop = chatViewport.scrollHeight;
+        }
+
+        // 4. Message Renderer
+        function appendMessage(sender, text) {
+            const msgArticle = document.createElement('article');
+            msgArticle.classList.add('msg', sender === 'user' ? 'msg-user' : 'msg-bot');
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.classList.add('msg-avatar');
+            avatarDiv.innerHTML = sender === 'user'
+                ? '<i class="fa-solid fa-user"></i>'
+                : '<i class="fa-solid fa-user-doctor"></i>';
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('msg-bubble');
+            bubbleDiv.textContent = text;
+
+            msgArticle.appendChild(avatarDiv);
+            msgArticle.appendChild(bubbleDiv);
+            chatViewport.appendChild(msgArticle);
+
+            scrollToBottom();
+        }
+
+        // 5. Typing Indicator
+        function showTypingIndicator() {
+            const indicatorArticle = document.createElement('article');
+            indicatorArticle.classList.add('msg', 'msg-bot');
+            indicatorArticle.id = 'typingIndicator';
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.classList.add('msg-avatar');
+            avatarDiv.innerHTML = '<i class="fa-solid fa-user-doctor"></i>';
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('msg-bubble', 'typing-bubble');
+            bubbleDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+            indicatorArticle.appendChild(avatarDiv);
+            indicatorArticle.appendChild(bubbleDiv);
+            chatViewport.appendChild(indicatorArticle);
+
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        // 6. Async Fetch to Flask /get Endpoint
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            userInput.value = '';
+            showTypingIndicator();
+
+            try {
+                const formData = new FormData();
+                formData.append('msg', message);
+
+                const response = await fetch('/get', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const botReply = await response.text();
+                removeTypingIndicator();
+                appendMessage('bot', botReply);
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                appendMessage('bot', 'Unable to connect to the medical inference backend.');
+            }
+        });
+    </script>
+</body>
+</html>
