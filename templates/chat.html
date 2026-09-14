@@ -8,6 +8,7 @@
     <!-- Icons & Flask Static CSS Integration -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
 </head>
 <body>
 
@@ -105,7 +106,12 @@
 
             const bubbleDiv = document.createElement('div');
             bubbleDiv.classList.add('msg-bubble');
-            bubbleDiv.textContent = text;
+
+            if (sender === 'bot') {
+                bubbleDiv.innerHTML = marked.parse(text);
+            } else {
+                bubbleDiv.textContent = text;
+            }
 
             msgArticle.appendChild(avatarDiv);
             msgArticle.appendChild(bubbleDiv);
